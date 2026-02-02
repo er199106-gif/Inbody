@@ -904,11 +904,19 @@
             if(currentLang==='ar') container.classList.add('rtl-report');
             else container.classList.remove('rtl-report');
 
+            // --- ADDED: Automatic Date ---
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const currentDate = new Date().toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', dateOptions);
+
             // Clean and safe HTML construction
             let html = `
                 <div class="report-header">
                     <div class="report-logo">INBODY BY ER1991</div>
                     <div style="color:#666; font-size:12px">Advanced Body Composition Analysis</div>
+                    <!-- Date Injection -->
+                    <div style="margin-top: 5px; font-size: 11px; color: #888; font-weight: bold;">
+                        ${currentLang === 'ar' ? 'التاريخ: ' : 'Date: '}${currentDate}
+                    </div>
                 </div>
 
                 <div class="report-section-title">Personal Information</div>
@@ -1016,9 +1024,17 @@
                 btn.disabled = false;
             } catch(e) {
                 console.error("PDF Error:", e);
-                alert("Error generating PDF. Please try Image download.");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                // Non-intrusive error handling (no alert)
+                const originalBtnColor = btn.style.borderColor;
+                btn.style.borderColor = "red";
+                btn.style.color = "red";
+                btn.innerText = currentLang==='en' ? "Error - Try Image" : "خطأ - جرب الصورة";
+                setTimeout(() => {
+                    btn.style.borderColor = originalBtnColor;
+                    btn.style.color = "";
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 3000);
             }
         }
 
