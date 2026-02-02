@@ -19,7 +19,7 @@
     <!-- html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-    <!-- jsPDF (Added for PDF Export) -->
+    <!-- jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
@@ -175,7 +175,7 @@
         .metric-label { color: var(--text-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
         .metric-sub { font-size: 0.85rem; color: var(--text-gray); margin-top: 5px; }
 
-        /* Macros Container (New) */
+        /* Macros Container */
         .macros-container {
             background: rgba(255,255,255,0.05);
             padding: 25px;
@@ -211,6 +211,7 @@
             position: relative;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             min-height: 500px;
+            display: block; /* Ensure display is block */
         }
         #report-capture-area.rtl-report { direction: rtl; font-family: 'Tajawal', sans-serif; text-align: right; }
         .report-header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 25px; }
@@ -494,7 +495,7 @@
         const i18n = {
             en: {
                 heroTitle: "Advanced Body Composition Analysis",
-                heroDesc: "Analysis based on the latest equations and approved scientific foundations.",
+                heroDesc: "Analysis based on the latest equations and approved scientific foundations for evaluating body composition, providing accurate indicators to support health and nutritional decisions.",
                 startTest: "Start Analysis", feat1: "Accuracy", feat1Desc: "Relies on modern scientific equations.",
                 feat2: "Smart Logic", feat2Desc: "Dynamic interpretation of body composition.", feat3: "Medical Report", feat3Desc: "Downloadable professional report.",
                 labelName: "Full Name", labelPhone: "Phone Number", labelGender: "Gender", male: "Male", female: "Female",
@@ -505,11 +506,12 @@
                 compositionTitle: "Body Composition Analysis", yourPlan: "Recommended Nutrition Strategy", reportPreview: "Professional Report",
                 downloadBtn: "Download Image", retest: "New Analysis", resultsTitle: "Your Analysis Results",
                 gGain: "Weight Gain Toward Ideal Range", gMuscle: "Muscle Building", gRecomp: "Recomposition", gLoss: "Fat Loss", gMaint: "Maintenance",
-                wLowFat: "Warning: Body Fat Percentage is extremely low.", wLowMuscle: "Notice: Muscle mass is below average.", wObese: "Alert: BMI indicates Obesity."
+                wLowFat: "Warning: Body Fat Percentage is extremely low.", wLowMuscle: "Notice: Muscle mass is below average.", wObese: "Alert: BMI indicates Obesity.",
+                planDesc: "Diet Plan Description"
             },
             ar: {
                 heroTitle: "تحليل متقدم لتركيبة الجسم",
-                heroDesc: "التحليل مبني على أحدث المعادلات والأسس العلمية المعتمدة.",
+                heroDesc: "التحليل مبني على أحدث المعادلات والأسس العلمية المعتمدة في تقييم تركيبة الجسم، ويقدم مؤشرات دقيقة لدعم القرارات الصحية والغذائية.",
                 startTest: "ابدأ التحليل", feat1: "دقة علمية", feat1Desc: "يعتمد على معادلات علمية حديثة.",
                 feat2: "منطق ذكي", feat2Desc: "تفسير ديناميكي لتركيبة الجسم.", feat3: "تقرير طبي", feat3Desc: "تقرير احترافي قابل للتحميل.",
                 labelName: "الاسم الكامل", labelPhone: "رقم الهاتف", labelGender: "الجنس", male: "ذكر", female: "أنثى",
@@ -520,36 +522,37 @@
                 compositionTitle: "تحليل تركيبة الجسم", yourPlan: "استراتيجية التغذية الموصى بها", reportPreview: "التقرير الاحترافي",
                 downloadBtn: "تحميل صورة", retest: "تحليل جديد", resultsTitle: "نتائج تحليلك",
                 gGain: "زيادة الوزن", gMuscle: "بناء العضلات", gRecomp: "إعادة تكوين", gLoss: "خسارة الدهون", gMaint: "الحفاظ على الوزن",
-                wLowFat: "تنبيه: نسبة الدهون منخفضة جداً.", wLowMuscle: "ملاحظة: كتلة العضلات أقل من المعدل.", wObese: "تحذير: مؤشر الكتلة يشير إلى السمنة."
+                wLowFat: "تنبيه: نسبة الدهون منخفضة جداً.", wLowMuscle: "ملاحظة: كتلة العضلات أقل من المعدل.", wObese: "تحذير: مؤشر الكتلة يشير إلى السمنة.",
+                planDesc: "وصف النظام"
             }
         };
 
         const dietLibrary = {
             "Low Carb Diet": { en: "A diet low in carbohydrates, focusing on protein and healthy fats.", ar: "نظام غذائي منخفض الكربوهيدرات، يركز على البروتين والدهون الصحية." },
-            "Mediterranean Diet": { en: "A diet rich in fruits, vegetables, olive oil, and lean protein.", ar: "نظام غذائي غني بالفواكه والخضروات وزيت الزيتون." },
-            "Keto Diet": { en: "A high-fat, low-carb diet that puts body in ketosis.", ar: "نظام غذائي عالي الدهون ومنخفض الكربوهيدرات." },
-            "Plant-Based Diet": { en: "A diet focusing on plant foods, avoiding animal products.", ar: "نظام غذائي نباتي." },
-            "Paleo Diet": { en: "A diet based on what early humans ate.", ar: "نظام غذائي يعتمد على أكل البشر القدامى." },
-            "Intermittent Fasting": { en: "Cycles of eating and fasting.", ar: "دورات من الأكل والصيام." },
-            "DASH Diet": { en: "Dietary Approaches to Stop Hypertension.", ar: "النهج الغذائي لوقف ارتفاع ضغط الدم." },
-            "Vegan Diet": { en: "A strict plant-based diet.", ar: "نظام غذائي نباتي صارم." },
-            "Zone Diet": { en: "A diet balancing 40% carbs, 30% protein, and 30% fat.", ar: "نظام غذائي يوازن 40/30/30." },
-            "High Protein Diet": { en: "A diet rich in protein.", ar: "نظام غذائي غني بالبروتين." },
-            "Gluten-Free Diet": { en: "A diet avoiding gluten.", ar: "نظام غذائي خالٍ من الغلوتين." },
-            "Nordic Diet": { en: "A diet inspired by Nordic cuisine.", ar: "نظام غذائي مستوحى من المطبخ الإسكندنافي." },
-            "Flexitarian Diet": { en: "A semi-vegetarian diet.", ar: "نظام غذائي شبه نباتي." },
-            "Whole30 Diet": { en: "A 30-day diet eliminating processed foods.", ar: "نظام غذائي لمدة 30 يوماً." },
-            "Mind Diet": { en: "A diet focusing on brain health.", ar: "نظام غذائي يركز على صحة الدماغ." },
-            "Low FODMAP Diet": { en: "A diet limiting fermentable carbohydrates.", ar: "نظام غذائي محدد للكربوهيدرات المخمرة." },
-            "Pescatarian Diet": { en: "A diet including fish.", ar: "نظام غذائي يشمل الأسماك." },
-            "Raw Food Diet": { en: "A diet focusing on uncooked foods.", ar: "نظام غذائي يعتمد على الأطعمة غير المطبوخة." },
-            "Anti-Inflammatory Diet": { en: "A diet rich in foods that reduce inflammation.", ar: "نظام غذائي غني بالأطعمة المضادة للالتهابات." },
-            "Detox Diet": { en: "A short-term diet focused on eliminating toxins.", ar: "نظام غذائي قصير المدى للتخلص من السموم." },
-            "Balanced Diet": { en: "A balanced diet.", ar: "نظام غذائي متوازن." },
-            "Low Cholesterol Diet": { en: "A diet aimed at reducing cholesterol.", ar: "نظام غذائي لخفض الكوليسترول." },
-            "Calorie Deficit Diet": { en: "A diet for weight loss.", ar: "نظام غذائي لفقدان الوزن." },
-            "High Fiber Diet": { en: "A diet rich in fiber.", ar: "نظام غذائي غني بالألياف." },
-            "Sustainable Diet": { en: "A diet emphasizing environmentally friendly foods.", ar: "نظام غذائي يركز على الأطعمة الصديقة للبيئة." }
+            "Mediterranean Diet": { en: "A diet rich in fruits, vegetables, olive oil, and lean protein.", ar: "نظام غذائي غني بالفواكه والخضروات وزيت الزيتون والبروتين الخفيف." },
+            "Keto Diet": { en: "A high-fat, low-carb diet that puts body in ketosis.", ar: "نظام غذائي عالي الدهون ومنخفض الكربوهيدرات يدخل الجسم في الحالة الكيتونية." },
+            "Plant-Based Diet": { en: "A diet focusing on plant foods, avoiding animal products.", ar: "نظام غذائي يركز على الأطعمة النباتية وتجنب المنتجات الحيوانية." },
+            "Paleo Diet": { en: "A diet based on what early humans ate: meat, fish, vegetables, and fruits.", ar: "نظام غذائي يعتمد على أكل البشر القدامى: اللحوم والأسماك والخضروات والفواكه." },
+            "Intermittent Fasting": { en: "Cycles of eating and fasting with specific meal times.", ar: "دورات من الأكل والصيام بأوقات وجبات محددة." },
+            "DASH Diet": { en: "Dietary Approaches to Stop Hypertension, focuses on reducing sodium and increasing nutrients.", ar: "النهج الغذائي لوقف ارتفاع ضغط الدم، يركز على تقليل الصوديوم وزيادة المغذيات." },
+            "Vegan Diet": { en: "A strict plant-based diet excluding all animal products.", ar: "نظام غذائي نباتي صارم يستثني جميع المنتجات الحيوانية." },
+            "Zone Diet": { en: "A diet balancing 40% carbs, 30% protein, and 30% fat.", ar: "نظام غذائي يوازن بين 40% كربوهيدرات و 30% بروتين و 30% دهون." },
+            "High Protein Diet": { en: "A diet rich in protein for muscle building and repair.", ar: "نظام غذائي غني بالبروتين لبناء العضلات وإصلاحها." },
+            "Gluten-Free Diet": { en: "A diet avoiding gluten, suitable for individuals with celiac disease or gluten sensitivity.", ar: "نظام غذائي خالٍ من الغلوتين، مناسب للأشخاص المصابين بمرض الاضطرابات الهضمية أو حساسية الغلوتين." },
+            "Nordic Diet": { en: "A diet inspired by Nordic cuisine, rich in whole grains, fatty fish, and root vegetables.", ar: "نظام غذائي مستوحى من المطبخ الإسكندنافي، غني بالحبوب الكاملة والأسماك الدهنية والخضروات الجذرية." },
+            "Flexitarian Diet": { en: "A semi-vegetarian diet with occasional inclusion of meat or fish.", ar: "نظام غذائي شبه نباتي يتضمن تضمين اللحوم أو الأسماك بين الحين والآخر." },
+            "Whole30 Diet": { en: "A 30-day diet eliminating processed foods, sugar, grains, and dairy for resetting metabolism.", ar: "نظام غذائي لمدة 30 يوماً يستثني الأطعمة المصنعة والسكر والحبوب ومنتجات الألبان لإعادة ضبط التمثيل الغذائي." },
+            "Mind Diet": { en: "A diet combining Mediterranean and DASH diets, focusing on brain health.", ar: "نظام غذائي يجمع بين حمية البحر المتوسط و DASH، مع التركيز على صحة الدماغ." },
+            "Low FODMAP Diet": { en: "A diet limiting fermentable carbohydrates, beneficial for those with IBS.", ar: "نظام غذائي محدد للكربوهيدرات المخمرة، مفيد للأشخاص الذين يعانون من متلازمة القولون العصبي." },
+            "Pescatarian Diet": { en: "A diet including fish and seafood as primary source of protein.", ar: "نظام غذائي يشمل الأسماك والمأكولات البحرية كمصدر أساسي للبروتين." },
+            "Raw Food Diet": { en: "A diet focusing on consuming uncooked, unprocessed foods.", ar: "نظام غذائي يركز على استهلاك الأطعمة غير المطبوخة وغير المصنعة." },
+            "Anti-Inflammatory Diet": { en: "A diet rich in foods that reduce inflammation, like berries, fatty fish, and green tea.", ar: "نظام غذائي غني بالأطعمة التي تقلل الالتهابات، مثل التوت والأسماك الدهنية والشاي الأخضر." },
+            "Detox Diet": { en: "A short-term diet focused on eliminating toxins through whole foods and hydration.", ar: "نظام غذائي قصير المدى يركز على التخلص من السموم من خلال الأطعمة الكاملة والترطيب." },
+            "Balanced Diet": { en: "A diet that equally emphasizes carbs, protein, and fats in moderation.", ar: "نظام غذائي يركز بشكل متساوٍ على الكربوهيدرات والبروتين والدهون باعتدال." },
+            "Low Cholesterol Diet": { en: "A diet aimed at reducing cholesterol levels, focusing on whole grains and lean protein.", ar: "نظام غذائي يهدف إلى خفض مستويات الكوليسترول، مع التركيز على الحبوب الكاملة والبروتين الخالي من الدهون." },
+            "Calorie Deficit Diet": { en: "A diet for weight loss by consuming fewer calories than burned.", ar: "نظام غذائي لفقدان الوزن من خلال استهلاك سعرات حرارية أقل مما يتم حرقه." },
+            "High Fiber Diet": { en: "A diet rich in fiber for digestive health and improved metabolism.", ar: "نظام غذائي غني بالألياف لصحة الجهاز الهضمي وتحسين التمثيل الغذائي." },
+            "Sustainable Diet": { en: "A diet emphasizing environmentally friendly and locally sourced foods.", ar: "نظام غذائي يركز على الأطعمة الصديقة للبيئة والمحلية." }
         };
 
         let currentLang = 'en';
@@ -623,7 +626,6 @@
         // --- NEW: Macros Calculation ---
         function calculateMacros(totalCalories, dietType) {
             let proteinPct, carbPct, fatPct;
-
             if (dietType.includes("Keto")) {
                 proteinPct = 0.25; carbPct = 0.05; fatPct = 0.70;
             } else if (dietType.includes("High Protein") || dietType.includes("Paleo")) {
@@ -631,10 +633,8 @@
             } else if (dietType.includes("Low Carb")) {
                 proteinPct = 0.30; carbPct = 0.20; fatPct = 0.50;
             } else {
-                // Balanced Diet (Default)
                 proteinPct = 0.20; carbPct = 0.50; fatPct = 0.30;
             }
-
             return {
                 protein: Math.round((totalCalories * proteinPct) / 4),
                 carbs: Math.round((totalCalories * carbPct) / 4),
@@ -642,7 +642,6 @@
             };
         }
 
-        // --- NEW: Save History ---
         function saveToHistory(res, name) {
             try {
                 let history = JSON.parse(localStorage.getItem('inbody_history') || '[]');
@@ -655,18 +654,13 @@
                     metabolicAge: res.metabolicAge,
                     vFat: res.vFat
                 };
-                history.unshift(record); // Add to top
-                if (history.length > 5) history.pop(); // Keep last 5
+                history.unshift(record);
+                if (history.length > 5) history.pop();
                 localStorage.setItem('inbody_history', JSON.stringify(history));
-                console.log("History saved:", record);
-            } catch(e) {
-                console.warn("LocalStorage not available", e);
-            }
+            } catch(e) { console.warn("LocalStorage not available", e); }
         }
 
-        // --- UPDATED: calculateResults logic (Integrating User's Request) ---
         function calculateAndShowResults() {
-            // Inputs
             const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
             const gender = document.getElementById('gender').value;
@@ -675,12 +669,10 @@
             const weight = parseFloat(document.getElementById('weight').value);
             const activityLevel = document.getElementById('activity_level').value;
 
-            // 1. Age
             const today = new Date();
             let age = today.getFullYear() - birthDate.getFullYear();
             if (today.getMonth() < birthDate.getMonth() || (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) age--;
 
-            // 2. BMI & HeightM
             const heightM = height / 100;
             const bmi = weight / (heightM * heightM);
 
@@ -690,27 +682,22 @@
 
             // --- UPDATE 2: TDEE ---
             const activityMultipliers = {
-                'Low (No activity)': 1.2,
-                'Light (1-3 workouts/week)': 1.375,
-                'Moderate (3-5 workouts/week)': 1.55,
-                'High (Daily exercise)': 1.725,
-                'Very High (Intense daily exercise)': 1.9
+                'Low (No activity)': 1.2, 'Light (1-3 workouts/week)': 1.375,
+                'Moderate (3-5 workouts/week)': 1.55, 'High (Daily exercise)': 1.725, 'Very High (Intense daily exercise)': 1.9
             };
             const tdee = Math.round(bmr * activityMultipliers[activityLevel]);
 
             // --- UPDATE 3: Fat Percentage (Deurenberg) ---
             const genderFactor = (gender === 'Male') ? 1 : 0;
             let fatPercentage = (1.20 * bmi) + (0.23 * age) - (10.8 * genderFactor) - 5.4;
-            
-            // Validation for display (keep it reasonable)
             if (gender === 'Male' && fatPercentage < 3) fatPercentage = 3;
             if (gender === 'Female' && fatPercentage < 8) fatPercentage = 8;
 
             const fat_mass = weight * (fatPercentage / 100);
 
-            // --- UPDATE 4: Visceral Fat (Estimate) ---
+            // --- UPDATE 4: Visceral Fat ---
             let vFat = (0.5 * bmi) + (0.1 * age) - (gender === 'Male' ? 5.8 : 4.4);
-            vFat = Math.max(1, Math.min(20, Math.round(vFat))); // Range 1 to 20
+            vFat = Math.max(1, Math.min(20, Math.round(vFat)));
 
             // --- UPDATE 5: Metabolic Age ---
             let metabolicAge = age;
@@ -718,7 +705,7 @@
             const diff = ((bmr - idealBmr) / idealBmr) * 100;
             metabolicAge = Math.round(age - (diff * 0.5));
 
-            // --- Existing Logic: Muscle & Water (Preserved) ---
+            // --- Existing Logic: Muscle & Water ---
             let muscle_mass, skeletal_muscle_mass, minerals_mass, water_mass;
             if(gender==="Male") {
                 muscle_mass = (0.566 * weight) + (0.143 * height) - (0.191 * age) - 17.8;
@@ -731,18 +718,27 @@
                 minerals_mass = weight * 0.045;
                 water_mass = weight * 0.5;
             }
-
             const protein_mass = 20 * (muscle_mass / weight);
 
             // --- UPDATE: Macros Calculation ---
-            // Determine diet type for macros based on diet_plan_1
-            let dietType = "Default"; 
-            // We need to calculate diet plans first to know which type to use, or use a simple heuristic
-            // For simplicity, we will map Diet Name to Keyword after calculating diets below.
-            // But let's pre-calculate simple macros based on goal if needed? 
-            // No, the user wants calculateMacros function called. We will call it in render step or here.
+            // Determine diet type for macros
+            let dietType = "Default";
+            if (bmi > 35) dietType = "Low Carb Diet";
+            else if (30 <= bmi && bmi <= 35) dietType = "Keto Diet";
+            else if (25 <= bmi && bmi < 30) dietType = "Mediterranean Diet";
+            else if (fatPercentage > 30) dietType = "Vegan Diet";
+            else if ((muscle_mass/weight)*100 > 40) dietType = "High Protein Diet";
+            else if (activityLevel == "Low (No activity)") dietType = "Mind Diet";
+            else if (activityLevel == "Moderate (3-5 workouts/week)") dietType = "Intermittent Fasting";
+            else if (bmi < 18.5) dietType = "Zone Diet";
+            else if (fatPercentage < 20) dietType = "Nordic Diet";
+            else if (minerals_mass > 3) dietType = "DASH Diet";
+            else if (weight % 2 == 0) dietType = "Whole30 Diet";
+            else dietType = "Low FODMAP Diet";
             
-            // Other calcs (Python Logic Preservation)
+            const finalMacros = calculateMacros(tdee, dietType);
+
+            // Other calcs
             const activity_carb_ratios = {
                 "Low (No activity)": 0.45, "Light (1-3 workouts/week)": 0.50,
                 "Moderate (3-5 workouts/week)": 0.55, "High (Daily exercise)": 0.60,
@@ -750,16 +746,18 @@
             };
             const carb_ratio = activity_carb_ratios[activityLevel];
             const carb_mass = (tdee * carb_ratio) / 4;
+
             const calcium = minerals_mass * 0.35;
             const iron = minerals_mass * 0.05;
             const magnesium = minerals_mass * 0.15;
+
             const ideal_weight = 22.5 * Math.pow(height / 100, 2);
             const ideal_weight_range = [18.5 * Math.pow(height / 100, 2), 24.9 * Math.pow(height / 100, 2)];
             const hr_max = 208 - age;
             const fat_burning_zone_min = hr_max * 0.60;
             const fat_burning_zone_max = hr_max * 0.70;
 
-            // --- Diet Selection (Python Logic) ---
+            // --- Diet Selection ---
             let diet_plan_1, diet_plan_2;
             let muscle_mass_pct = (muscle_mass / weight) * 100;
 
@@ -805,9 +803,7 @@
             };
             const goal = goalMap[body_type] || goalMap["Normal"];
 
-            // --- UPDATE: Calculate Macros based on Diet 1 ---
-            const finalMacros = calculateMacros(tdee, diet_plan_1);
-
+            // Store Data
             calculationData = {
                 name, phone, gender, age, height, weight, bmi, body_type, 
                 fatPercentage, fat_mass, muscle_mass, skeletal_muscle_mass, water_mass, minerals_mass, protein_mass,
@@ -819,10 +815,7 @@
                 goal, diet_plan_1, diet_plan_2
             };
 
-            // Save to History
             saveToHistory(calculationData, name);
-
-            // Render
             renderDashboard(calculationData);
             renderReportPreview(calculationData);
             renderChart(calculationData.muscle_mass, calculationData.fat_mass, calculationData.weight);
@@ -843,7 +836,6 @@
                 wContainer.appendChild(div);
             }
 
-            // Main Metrics
             document.getElementById('res-bmi').innerText = data.bmi.toFixed(1);
             document.getElementById('res-body-type').innerText = data.body_type.toUpperCase();
             document.getElementById('res-fat').innerText = data.fatPercentage.toFixed(1) + "%";
@@ -853,23 +845,19 @@
             document.getElementById('res-calories').innerText = Math.round(data.daily_caloric_needs);
             document.getElementById('res-adj-cal').innerText = `Adj: ${Math.round(data.daily_caloric_needs)}`;
 
-            // NEW Metrics
             document.getElementById('res-metabolic-age').innerText = data.metabolicAge;
             document.getElementById('res-vfat').innerText = data.vFat;
 
-            // Detailed
             document.getElementById('res-water').innerText = `${data.water_mass.toFixed(1)} L`;
             document.getElementById('res-protein-mass').innerText = `${data.protein_mass.toFixed(1)} kg`;
             document.getElementById('res-minerals').innerText = `${data.minerals_mass.toFixed(2)} kg`;
             document.getElementById('res-hr-zone').innerText = `${Math.round(data.fat_burning_zone_min)}-${Math.round(data.fat_burning_zone_max)}`;
             document.getElementById('res-ideal-weight').innerText = `${data.ideal_weight.toFixed(1)} kg`;
 
-            // NEW: Macros Display
             document.getElementById('macro-p').innerText = data.macros.protein;
             document.getElementById('macro-c').innerText = data.macros.carbs;
             document.getElementById('macro-f').innerText = data.macros.fats;
 
-            // Diet Cards
             const dContainer = document.getElementById('diet-container');
             dContainer.innerHTML = '';
             [data.diet_plan_1, data.diet_plan_2].forEach((dietName, idx) => {
@@ -916,11 +904,13 @@
             if(currentLang==='ar') container.classList.add('rtl-report');
             else container.classList.remove('rtl-report');
 
-            container.innerHTML = `
+            // Clean and safe HTML construction
+            let html = `
                 <div class="report-header">
                     <div class="report-logo">INBODY BY ER1991</div>
                     <div style="color:#666; font-size:12px">Advanced Body Composition Analysis</div>
                 </div>
+
                 <div class="report-section-title">Personal Information</div>
                 <div class="report-grid">
                     <div class="report-row"><span>Name:</span> <span class="report-val">${data.name}</span></div>
@@ -928,6 +918,7 @@
                     <div class="report-row"><span>Age:</span> <span class="report-val">${data.age} years</span></div>
                     <div class="report-row"><span>Gender:</span> <span class="report-val">${data.gender}</span></div>
                 </div>
+
                 <div class="report-section-title">Body Analysis</div>
                 <div class="report-grid">
                     <div class="report-row"><span>Height:</span> <span class="report-val">${data.height} cm</span></div>
@@ -937,11 +928,13 @@
                     <div class="report-row"><span>Body Fat %:</span> <span class="report-val">${data.fatPercentage.toFixed(2)}%</span></div>
                     <div class="report-row"><span>Fat Mass:</span> <span class="report-val">${data.fat_mass.toFixed(2)} kg</span></div>
                 </div>
+
                 <div class="report-section-title" style="background:#fff3cd; color:#856404">Advanced Estimates</div>
                 <div class="report-grid">
                     <div class="report-row"><span>Metabolic Age:</span> <span class="report-val" style="color:#856404; font-weight:800">${data.metabolicAge}</span></div>
                     <div class="report-row"><span>Visceral Fat (Est):</span> <span class="report-val" style="color:#d32f2f; font-weight:800">${data.vFat}</span></div>
                 </div>
+
                 <div class="report-section-title">Muscle & Minerals</div>
                 <div class="report-grid">
                     <div class="report-row"><span>Muscle Mass:</span> <span class="report-val">${data.muscle_mass.toFixed(2)} kg</span></div>
@@ -950,18 +943,7 @@
                     <div class="report-row"><span>Water:</span> <span class="report-val">${data.water_mass.toFixed(2)} kg</span></div>
                     <div class="report-row"><span>Minerals:</span> <span class="report-val">${data.minerals_mass.toFixed(2)} kg</span></div>
                 </div>
-                <div class="report-section-title">Daily Macros (${data.diet_plan_1})</div>
-                <div class="report-grid" style="grid-template-columns: 1fr 1fr 1fr; text-align:center;">
-                    <div class="report-row" style="flex-direction:column; border:none;">
-                        <small>Protein</small> <span class="report-val" style="font-size:1.2rem; color:#00e676">${data.macros.protein}g</span>
-                    </div>
-                    <div class="report-row" style="flex-direction:column; border:none;">
-                        <small>Carbs</small> <span class="report-val" style="font-size:1.2rem; color:#ffb142">${data.macros.carbs}g</span>
-                    </div>
-                    <div class="report-row" style="flex-direction:column; border:none;">
-                        <small>Fats</small> <span class="report-val" style="font-size:1.2rem; color:#ff5252">${data.macros.fats}g</span>
-                    </div>
-                </div>
+
                 <div class="report-section-title">Detailed Components</div>
                 <div class="report-full">
                     <div class="report-row"><span>Carbohydrates:</span> <span class="report-val">${data.carb_mass.toFixed(2)} g</span></div>
@@ -969,11 +951,13 @@
                     <div class="report-row"><span>Iron:</span> <span class="report-val">${data.iron.toFixed(2)} g</span></div>
                     <div class="report-row"><span>Magnesium:</span> <span class="report-val">${data.magnesium.toFixed(2)} g</span></div>
                 </div>
+
                 <div class="report-section-title">Metabolism & Energy</div>
                 <div class="report-full">
                     <div class="report-row"><span>BMR:</span> <span class="report-val">${data.bmr.toFixed(2)} kcal/day</span></div>
                     <div class="report-row"><span>Daily Calories:</span> <span class="report-val">${data.daily_caloric_needs.toFixed(2)} kcal</span></div>
                 </div>
+
                 <div class="report-section-title">Targets & Goals</div>
                 <div class="report-grid">
                     <div class="report-row"><span>Ideal Weight:</span> <span class="report-val">${data.ideal_weight.toFixed(2)} kg</span></div>
@@ -981,27 +965,36 @@
                     <div class="report-row"><span>HR Max:</span> <span class="report-val">${data.hr_max} bpm</span></div>
                     <div class="report-row"><span>Fat Burn Zone:</span> <span class="report-val">${data.fat_burning_zone_min.toFixed(2)} - ${data.fat_burning_zone_max.toFixed(2)} bpm</span></div>
                 </div>
+
                 <div style="background:#f0fdf4; padding:8px; border-radius:4px; margin-top:10px; text-align:center; color:#166534; font-weight:bold;">
                     ${L[data.goal.key]}
                 </div>
+
                 <div class="report-section-title">Recommended Nutrition</div>
                 <div style="background:#f9f9f9; padding:10px; border-radius:4px;">
                     <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee">
-                        <b style="color:#00d2ff">${data.diet_plan_1}</b><br>
-                        <span style="font-size:12px; color:#555">${dietLibrary[data.diet_plan_1][currentLang]}</span>
+                        <b style="color:#00d2ff">Recommended Diet Plan:</b> 
+                        <span class="report-val" style="font-weight:bold; color:#000">${data.diet_plan_1}</span>
+                    </div>
+                    <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee; font-size:12px; color:#555">
+                        <b>Diet Plan Description:</b> ${dietLibrary[data.diet_plan_1][currentLang]}
                     </div>
                     <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee">
-                        <b style="color:#00d2ff">${data.diet_plan_2}</b><br>
-                        <span style="font-size:12px; color:#555">${dietLibrary[data.diet_plan_2][currentLang]}</span>
+                        <b style="color:#00d2ff">Second Recommended Diet Plan:</b> 
+                        <span class="report-val" style="font-weight:bold; color:#000">${data.diet_plan_2}</span>
+                    </div>
+                    <div style="margin-bottom:10px; padding-bottom:10px; font-size:12px; color:#555">
+                        <b>Diet Plan Description:</b> ${dietLibrary[data.diet_plan_2][currentLang]}
                     </div>
                 </div>
+
                 <div style="margin-top:30px; text-align:center; border-top:1px solid #eee; padding-top:10px; font-size:11px; color:#999;">
                     Generated by INBODY BY ER1991 App © 2026
                 </div>
             `;
+            container.innerHTML = html;
         }
 
-        // --- NEW: PDF Download ---
         async function downloadPDF() {
             const btn = document.querySelector('button[onclick="downloadPDF()"]');
             const originalText = btn.innerHTML;
@@ -1011,20 +1004,14 @@
             try {
                 const { jsPDF } = window.jspdf;
                 const element = document.getElementById("report-capture-area");
-                
-                // High scale for better quality
                 const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
                 const imgData = canvas.toDataURL("image/png");
-                
                 const pdf = new jsPDF("p", "mm", "a4");
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const imgProps = pdf.getImageProperties(imgData);
-                // Calculate height to fit width
                 const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                
                 pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
                 pdf.save(`InBody_Report_${new Date().getTime()}.pdf`);
-                
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             } catch(e) {
@@ -1036,7 +1023,7 @@
         }
 
         function downloadReport() {
-            const btn = document.querySelector('.btn-primary'); // Main button
+            const btn = document.querySelector('.btn-primary');
             const originalText = btn.innerHTML;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${currentLang==='en'?'Generating...':'جاري الإنشاء...'}`;
             btn.disabled = true;
@@ -1060,7 +1047,7 @@
                     title.style.marginBottom = '10px';
                     imgContainer.appendChild(title);
                     imgContainer.appendChild(img);
-                    imgContainer.classList.remove('hidden');
+                    imgContainer.classList.remove('hidden'); 
 
                     btn.innerHTML = originalText;
                     btn.disabled = false;
