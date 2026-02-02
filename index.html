@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InBody by ER1991</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #00d2ff; /* Medical Cyan */
+            --primary-dark: #009ac2;
+            --accent: #00e676; /* Success Green */
+            --danger: #ff5252;
+            --warning: #ffb142;
+            --bg-dark: #0f1115;
+            --bg-card: #1c1f26;
+            --text-light: #ffffff;
+            --text-gray: #9ca3af;
+            --font-en: 'Inter', sans-serif;
+            --font-ar: 'Tajawal', sans-serif;
+            --transition: all 0.3s ease;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-en);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body.rtl {
+            direction: rtl;
+            font-family: var(--font-ar);
+        }
+
+        /* Utility */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .text-center { text-align: center; }
+        .text-primary { color: var(--primary); }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-4 { margin-top: 1rem; }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #000;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 210, 255, 0.4); }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        .btn-outline:hover { background: rgba(0, 210, 255, 0.1); }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: fadeOut 0.5s ease-out 2.5s forwards;
+            pointer-events: none; /* Allows click through after animation */
+        }
+        .splash-logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, var(--primary), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: scaleUp 1.5s ease-in-out infinite alternate;
+        }
+        .splash-sub { color: var(--text-gray); margin-top: 10px; font-size: 0.9rem; letter-spacing: 1px; }
+
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0.8; } to { transform: scale(1.05); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+        /* Nav */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .app-logo { font-size: 1.4rem; font-weight: 700; color: var(--primary); letter-spacing: -1px; }
+        .lang-switch { cursor: pointer; font-weight: 600; color: var(--text-gray); transition: color 0.3s; }
+        .lang-switch:hover { color: var(--text-light); }
+
+        /* Screens */
+        .screen { min-height: 85vh; padding: 40px 0; display: flex; flex-direction: column; justify-content: center; animation: fadeIn 0.6s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Landing */
+        .hero-title { font-size: 3rem; font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        .hero-desc { font-size: 1.1rem; color: var(--text-gray); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 50px; }
+        .feature-card { background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); transition: var(--transition); }
+        .feature-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .feature-icon { font-size: 2rem; color: var(--primary); margin-bottom: 15px; }
+
+        /* Form */
+        .form-container { background: var(--bg-card); padding: 40px; border-radius: 16px; max-width: 550px; margin: 0 auto; width: 100%; border: 1px solid rgba(255,255,255,0.05); }
+        .progress-bar { height: 4px; background: rgba(255,255,255,0.1); margin-bottom: 30px; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); width: 33%; transition: width 0.3s ease; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: var(--text-gray); font-size: 0.9rem; font-weight: 500; }
+        input { width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 1rem; outline: none; transition: border 0.3s; }
+        input:focus { border-color: var(--primary); }
+
+        .radio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .radio-card { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px solid transparent; transition: var(--transition); }
+        .radio-card:hover { background: rgba(255,255,255,0.08); }
+        .radio-card.selected { background: rgba(0, 210, 255, 0.15); border-color: var(--primary); color: var(--primary); }
+
+        /* Results */
+        .dashboard-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
+        .goal-badge { background: var(--accent); color: #000; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; }
+        
+        /* Medical Warnings */
+        .warning-box {
+            background: rgba(255, 177, 66, 0.15);
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            animation: pulse-border 2s infinite;
+        }
+        body.rtl .warning-box { border-left: none; border-right: 4px solid var(--warning); }
+        @keyframes pulse-border { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
+
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .metric-card { background: var(--bg-card); padding: 25px; border-radius: 12px; position: relative; overflow: hidden; }
+        .metric-card::before { content:''; position: absolute; top:0; left:0; width: 4px; height: 100%; background: var(--primary); opacity: 0.5; }
+        body.rtl .metric-card::before { left: auto; right: 0; }
+        
+        .metric-value { font-size: 2.2rem; font-weight: 700; margin: 10px 0; color: var(--text-light); }
+        .metric-label { color: var(--text-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .metric-sub { font-size: 0.85rem; color: var(--text-gray); margin-top: 5px; }
+
+        .charts-container { background: var(--bg-card); padding: 25px; border-radius: 12px; margin-bottom: 40px; }
+        .chart-wrapper { height: 300px; width: 100%; }
+
+        /* Report Preview */
+        #report-capture-area {
+            background: white;
+            color: #1a1a1a;
+            font-family: 'Inter', sans-serif;
+            padding: 50px;
+            width: 100%;
+            max-width: 850px;
+            margin: 0 auto 30px;
+            border-radius: 4px;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            transform: scale(1); /* Ensure capture is crisp */
+            transform-origin: top center;
+        }
+        #report-capture-area.rtl-report { direction: rtl; font-family: 'Tajawal', sans-serif; text-align: right; }
+
+        .report-header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 25px; }
+        .report-logo { font-size: 2rem; font-weight: 800; color: #00d2ff; letter-spacing: -1px; }
+        .report-row { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #e0e0e0; padding-bottom: 5px; font-size: 15px; }
+        .report-section-title { background: #f4f8fb; color: #006ba6; font-weight: 700; padding: 8px 15px; margin-top: 20px; margin-bottom: 10px; border-radius: 4px; display: inline-block; }
+        
+        /* Footer */
+        footer { text-align: center; padding: 40px 0; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-gray); font-size: 0.85rem; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2rem; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            #report-capture-area { padding: 20px; }
+            .report-row { font-size: 13px; flex-direction: row; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <div class="splash-logo">INBODY BY ER1991</div>
+        <div class="splash-sub">Professional Body Composition Analysis</div>
+    </div>
+
+    <div class="container">
+        <!-- Nav -->
+        <nav>
+            <div class="app-logo">INBODY <span style="color:#fff">BY ER1991</span></div>
+            <div class="lang-switch" onclick="toggleLanguage()" id="langBtn">العربية</div>
+        </nav>
+
+        <!-- 1. Landing -->
+        <div id="landing-page" class="screen">
+            <div class="text-center">
+                <h1 class="hero-title" data-i18n="heroTitle">Precise Science,<br>Personalized Health</h1>
+                <p class="hero-desc" data-i18n="heroDesc">Medical-grade body analysis engine. Get accurate metrics, smart diet plans, and professional reports instantly.</p>
+                <button class="btn btn-primary" onclick="goToScreen('form-page')" data-i18n="startTest">Start Analysis <i class="fas fa-chevron-right"></i></button>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-microscope feature-icon"></i>
+                        <h3 data-i18n="feat1">Clinical Accuracy</h3>
+                        <p data-i18n="feat1Desc">Based on validated scientific equations and physiological standards.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-brain feature-icon"></i>
+                        <h3 data-i18n="feat2">Smart Logic</h3>
+                        <p data-i18n="feat2Desc">Dynamic interpretation of body composition to generate precise goals.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-file-medical-alt feature-icon"></i>
+                        <h3 data-i18n="feat3">Medical Report</h3>
+                        <p data-i18n="feat3Desc">Downloadable professional report for tracking and consultation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Form Wizard -->
+        <div id="form-page" class="screen hidden">
+            <div class="form-container">
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                <h3 class="text-center mb-4" id="step-indicator" style="color:var(--primary)">Step 1 of 3</h3>
+
+                <form id="inbody-form" onsubmit="return false;">
+                    <!-- Step 1 -->
+                    <div id="step-1" class="wizard-step">
+                        <div class="form-group">
+                            <label data-i18n="labelName">Full Name</label>
+                            <input type="text" id="name" placeholder="e.g. John Doe">
+                            <div class="error-msg text-danger" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:5px" id="err-name">Name required</div>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="labelPhone">Phone Number (Optional)</label>
+                            <input type="tel" id="phone" placeholder="e.g. +1 234 567 890">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="labelGender">Gender</label>
+                            <div class="radio-group">
+                                <div class="radio-card" onclick="selectRadio('gender', 'Male', this)"><i class="fas fa-male"></i> <span data-i18n="male">Male</span></div>
+                                <div class="radio-card" onclick="selectRadio('gender', 'Female', this)"><i class="fas fa-female"></i> <span data-i18n="female">Female</span></div>
+                            </div>
+                            <input type="hidden" id="gender">
+                            <div class="error-msg text-danger" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:5px" id="err-gender">Select Gender</div>
+                        </div>
+                        <button class="btn btn-primary" style="width:100%" onclick="nextStep(1)" data-i18n="next">Next</button>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div id="step-2" class="wizard-step hidden">
+                        <div class="form-group">
+                            <label data-i18n="labelDob">Date of Birth</label>
+                            <input type="date" id="birth_date">
+                            <div class="error-msg text-danger" style="color:var(--danger); font-size:0.8rem; display:none" id="err-dob">Valid date required</div>
+                        </div>
+                        <div class="flex gap-4" style="gap:15px">
+                            <div class="form-group" style="flex:1">
+                                <label data-i18n="labelHeight">Height (cm)</label>
+                                <input type="number" id="height" placeholder="175">
+                                <div class="error-msg text-danger" style="color:var(--danger); font-size:0.8rem; display:none" id="err-height">Required</div>
+                            </div>
+                            <div class="form-group" style="flex:1">
+                                <label data-i18n="labelWeight">Weight (kg)</label>
+                                <input type="number" id="weight" placeholder="75">
+                                <div class="error-msg text-danger" style="color:var(--danger); font-size:0.8rem; display:none" id="err-weight">Required</div>
+                            </div>
+                        </div>
+                        <div class="flex" style="gap:10px">
+                            <button class="btn btn-outline" style="flex:1" onclick="prevStep(2)" data-i18n="back">Back</button>
+                            <button class="btn btn-primary" style="flex:1" onclick="nextStep(2)" data-i18n="next">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div id="step-3" class="wizard-step hidden">
+                        <label data-i18n="labelActivity" class="mb-4">Activity Level</label>
+                        <div class="radio-group" style="grid-template-columns: 1fr;">
+                            <div class="radio-card" onclick="selectRadio('activity', 'Low (No activity)', this)"><i class="fas fa-couch"></i> <span data-i18n="actLow">Low (Sedentary)</span></div>
+                            <div class="radio-card" onclick="selectRadio('activity', 'Light (1-3 workouts/week)', this)"><i class="fas fa-walking"></i> <span data-i18n="actLight">Light (1-3 workouts/week)</span></div>
+                            <div class="radio-card" onclick="selectRadio('activity', 'Moderate (3-5 workouts/week)', this)"><i class="fas fa-running"></i> <span data-i18n="actMod">Moderate (3-5 workouts/week)</span></div>
+                            <div class="radio-card" onclick="selectRadio('activity', 'High (Daily exercise)', this)"><i class="fas fa-dumbbell"></i> <span data-i18n="actHigh">High (Daily exercise)</span></div>
+                            <div class="radio-card" onclick="selectRadio('activity', 'Very High (Intense daily exercise)', this)"><i class="fas fa-fire"></i> <span data-i18n="actVHigh">Very High (Athlete)</span></div>
+                        </div>
+                        <input type="hidden" id="activity_level">
+                        <div class="error-msg text-danger" style="color:var(--danger); font-size:0.8rem; display:none; margin-top:10px" id="err-activity">Select Activity</div>
+                        <br>
+                        <div class="flex" style="gap:10px">
+                            <button class="btn btn-outline" style="flex:1" onclick="prevStep(3)" data-i18n="back">Back</button>
+                            <button class="btn btn-primary" style="flex:1" onclick="submitForm()" data-i18n="analyze">Analyze Body</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 3. Loading -->
+        <div id="loading-page" class="screen hidden text-center">
+            <i class="fas fa-circle-notch fa-spin fa-3x text-primary mb-4"></i>
+            <h2 data-i18n="analyzing">Processing Analysis...</h2>
+            <p style="color:var(--text-gray)" id="loading-subtext">Calculating BMR, Visceral Fat Estimate & Macros</p>
+        </div>
+
+        <!-- 4. Results -->
+        <div id="results-page" class="screen hidden">
+            <div class="dashboard-header">
+                <div>
+                    <h2 style="margin-bottom:5px" data-i18n="resultsTitle">Your Analysis Results</h2>
+                    <div class="text-gray" id="res-name-display"></div>
+                </div>
+                <div class="goal-badge" id="res-goal-badge">MAINTENANCE</div>
+            </div>
+
+            <!-- Warnings Container -->
+            <div id="warnings-container"></div>
+
+            <!-- Top Metrics -->
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <div class="metric-label">BMI</div>
+                    <div class="metric-value" id="res-bmi">--</div>
+                    <div class="metric-sub text-primary" id="res-body-type">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label" data-i18n="bodyFat">Body Fat %</div>
+                    <div class="metric-value" id="res-fat">--</div>
+                    <div class="metric-sub" id="res-fat-mass">-- kg Fat Mass</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label" data-i18n="muscle">Muscle Mass</div>
+                    <div class="metric-value" id="res-muscle">--</div>
+                    <div class="metric-sub" id="res-sk-muscle">-- kg Skeletal</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label" data-i18n="calories">Daily Energy</div>
+                    <div class="metric-value" id="res-calories">--</div>
+                    <div class="metric-sub" id="res-adj-cal">Adjusted: --</div>
+                </div>
+            </div>
+
+            <!-- Detailed Metrics -->
+            <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+                <div class="metric-card" style="padding:15px">
+                    <div class="metric-label">Water</div>
+                    <div class="metric-value" style="font-size:1.5rem" id="res-water">--</div>
+                </div>
+                <div class="metric-card" style="padding:15px">
+                    <div class="metric-label">Protein Mass</div>
+                    <div class="metric-value" style="font-size:1.5rem" id="res-protein-mass">--</div>
+                </div>
+                <div class="metric-card" style="padding:15px">
+                    <div class="metric-label">Minerals</div>
+                    <div class="metric-value" style="font-size:1.5rem" id="res-minerals">--</div>
+                </div>
+                <div class="metric-card" style="padding:15px">
+                    <div class="metric-label">Fat Burn HR</div>
+                    <div class="metric-value" style="font-size:1.5rem" id="res-hr-zone">--</div>
+                </div>
+                <div class="metric-card" style="padding:15px">
+                    <div class="metric-label">Ideal Weight</div>
+                    <div class="metric-value" style="font-size:1.5rem" id="res-ideal-weight">--</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <h3 class="mb-4" data-i18n="compositionTitle">Body Composition Analysis</h3>
+                <div class="chart-wrapper">
+                    <canvas id="compositionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Dynamic Diets -->
+            <div class="mb-4">
+                <h3 class="mb-4" data-i18n="yourPlan">Recommended Nutrition Strategy</h3>
+                <div id="diet-container"></div>
+            </div>
+
+            <!-- Report Preview -->
+            <div class="text-center mt-4" style="background:var(--bg-card); padding:30px; border-radius:12px">
+                <h3 class="mb-4" data-i18n="reportPreview">Professional Report</h3>
+                
+                <div id="report-capture-area">
+                    <!-- Content injected via JS -->
+                </div>
+
+                <div class="flex justify-center" style="gap:15px; margin-top:20px">
+                    <button class="btn btn-primary" onclick="downloadReport()">
+                        <i class="fas fa-download"></i> <span data-i18n="downloadBtn">Download Report</span>
+                    </button>
+                    <button class="btn btn-outline" onclick="location.reload()">
+                        <i class="fas fa-redo"></i> <span data-i18n="retest">New Analysis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© ER1991 2026 – InBody Analysis System. All Rights Reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // ========================
+        // 1. Data & Localization
+        // ========================
+        const i18n = {
+            en: {
+                heroTitle: "Precise Science,<br>Personalized Health",
+                heroDesc: "Medical-grade body analysis engine. Get accurate metrics, smart diet plans, and professional reports instantly.",
+                startTest: "Start Analysis", feat1: "Clinical Accuracy", feat1Desc: "Based on validated scientific equations.",
+                feat2: "Smart Logic", feat2Desc: "Dynamic interpretation of body composition.", feat3: "Medical Report", feat3Desc: "Downloadable professional report.",
+                labelName: "Full Name", labelPhone: "Phone", labelGender: "Gender", male: "Male", female: "Female",
+                labelDob: "Date of Birth", labelHeight: "Height (cm)", labelWeight: "Weight (kg)", labelActivity: "Activity Level",
+                actLow: "Low (Sedentary)", actLight: "Light", actMod: "Moderate", actHigh: "High (Daily)", actVHigh: "Athlete",
+                analyze: "Analyze Body", back: "Back", next: "Next",
+                analyzing: "Processing Analysis...", bodyFat: "Body Fat %", muscle: "Muscle Mass", calories: "Daily Energy",
+                compositionTitle: "Body Composition Analysis", yourPlan: "Recommended Nutrition Strategy", reportPreview: "Professional Report",
+                downloadBtn: "Download Report", retest: "New Analysis", resultsTitle: "Your Analysis Results",
+                // Report Labels
+                repHeader: "INBODY REPORT BY ER1991", repSub: "Scientific Analysis & Nutrition Plan",
+                lName: "Name", lAge: "Age", lGender: "Gender", lHeight: "Height", lWeight: "Weight", lBMI: "BMI", lType: "Body Type",
+                lFatPct: "Body Fat %", lFatMass: "Fat Mass", lMuscle: "Muscle Mass", lSkMuscle: "Skeletal Muscle", lWater: "Water Mass",
+                lProtMass: "Protein Mass", lMinerals: "Minerals", lHRMax: "Max HR", lFatBurn: "Fat Burn Zone", lIdealW: "Ideal Weight",
+                lGoal: "Primary Goal", lCal: "Calories", lAdjCal: "Adjusted", lProtT: "Protein Target", lCarbs: "Carbs", lDiets: "Recommended Diets",
+                // Goals
+                gGain: "Healthy Weight Gain", gMuscle: "Muscle Building", gRecomp: "Recomposition", gLoss: "Fat Loss", gMaint: "Maintenance",
+                // Warnings
+                wLowFat: "Warning: Body Fat Percentage is extremely low. This may pose health risks. Consult a specialist.",
+                wLowMuscle: "Notice: Muscle mass is significantly below average. Resistance training is recommended.",
+                wObese: "Alert: BMI indicates Obesity. Risk of cardiovascular issues is elevated. Medical consultation advised."
+            },
+            ar: {
+                heroTitle: "علم دقيق،<br>صحة مخصصة",
+                heroDesc: "محرك تحليل طبي للجسم. احصل على مقاييس دقيقة، خطط غذائية ذكية، وتقارير احترافية فوراً.",
+                startTest: "ابدأ التحليل", feat1: "دقة سريرية", feat1Desc: "بناءً على معادلات علمية موثقة.",
+                feat2: "منطق ذكي", feat2Desc: "تفسير ديناميكي لتركيبة الجسم.", feat3: "تقرير طبي", feat3Desc: "تقرير احترافي قابل للتحميل.",
+                labelName: "الاسم الكامل", labelPhone: "رقم الهاتف", labelGender: "الجنس", male: "ذكر", female: "أنثى",
+                labelDob: "تاريخ الميلاد", labelHeight: "الطول (سم)", labelWeight: "الوزن (كجم)", labelActivity: "مستوى النشاط",
+                actLow: "منخفض (خامل)", actLight: "خفيف", actMod: "متوسط", actHigh: "عالي (يومي)", actVHigh: "رياضي",
+                analyze: "حلل الجسم", back: "سابق", next: "التالي",
+                analyzing: "جاري معالجة التحليل...", bodyFat: "نسبة الدهون %", muscle: "كتلة العضلات", calories: "الطاقة اليومية",
+                compositionTitle: "تحليل تركيبة الجسم", yourPlan: "استراتيجية التغذية الموصى بها", reportPreview: "التقرير الاحترافي",
+                downloadBtn: "تحميل التقرير", retest: "تحليل جديد", resultsTitle: "نتائج تحليلك",
+                // Report Labels
+                repHeader: "تقرير InBody بواسطة ER1991", repSub: "تحليل علمي وخطة تغذية",
+                lName: "الاسم", lAge: "العمر", lGender: "الجنس", lHeight: "الطول", lWeight: "الوزن", lBMI: "مؤشر الكتلة", lType: "نوع الجسم",
+                lFatPct: "نسبة الدهون", lFatMass: "كتلة الدهون", lMuscle: "كتلة العضلات", lSkMuscle: "العضلات الهيكلية", lWater: "كتلة الماء",
+                lProtMass: "كتلة البروتين", lMinerals: "المعادن", lHRMax: "أقصى نبض", lFatBurn: "نطاق الحرق", lIdealW: "الوزن المثالي",
+                lGoal: "الهدف الأساسي", lCal: "سعرات", lAdjCal: "معدل", lProtT: "هدف البروتين", lCarbs: "كربوهيدرات", lDiets: "الأنظمة الموصى بها",
+                // Goals
+                gGain: "زيادة وزن صحية", gMuscle: "بناء العضلات", gRecomp: "إعادة تكوين الجسم", gLoss: "خسارة الدهون", gMaint: "الحفاظ على الوزن",
+                // Warnings
+                wLowFat: "تنبيه: نسبة الدهون منخفضة جداً. قد يشكل ذلك خطراً صحياً. يرجى استشارة اختصاصي.",
+                wLowMuscle: "ملاحظة: كتلة العضلات أقل بكثير من المعدل الطبيعي. يُنصح بممارسة تمارين المقاومة.",
+                wObese: "تحذير: مؤشر الكتلة يشير إلى السمنة. يزداد خطر المشاكل القلبية الوعائية. يُنصح باستشارة طبية."
+            }
+        };
+
+        // Diet Library with Bilingual Descriptions
+        const dietLibrary = {
+            "Low Carb Diet": { 
+                en: "Reduces carbohydrate intake to lower insulin levels and burn fat.", 
+                ar: "يقلل تناول الكربوهيدرات لخفض مستويات الأنسولين وحرق الدهون.",
+                targets: ["Obese", "Skinny Fat"] 
+            },
+            "Keto Diet": { 
+                en: "High fat, very low carb to induce ketosis for rapid fat loss.", 
+                ar: "عالي الدهون ومنخفض الكربوهيدرات جداً لدخول الحالة الكيتونية لفقدان سريع للدهون.",
+                targets: ["Obese"] 
+            },
+            "Intermittent Fasting": { 
+                en: "Cycles of fasting to improve insulin sensitivity and reduce calories.", 
+                ar: "دورات من الصيام لتحسين حساسية الأنسولين وتقليل السعرات.",
+                targets: ["Obese", "Normal"] 
+            },
+            "High Protein Diet": { 
+                en: "Elevated protein intake to support muscle retention and growth.", 
+                ar: "زيادة تناول البروتين لدعم الحفاظ على العضلات ونموها.",
+                targets: ["Skinny", "Skinny Fat", "Athletic"] 
+            },
+            "Muscle Gain Diet": { 
+                en: "Calorie surplus with high protein for maximizing muscle hypertrophy.", 
+                ar: "فائض سعرات حراري مع بروتين عالي لتعظيم تضخم العضلات.",
+                targets: ["Skinny", "Underweight"] 
+            },
+            "Lean Bulk Diet": { 
+                en: "Controlled surplus to gain muscle with minimal fat gain.", 
+                ar: "فائض مضبوط لاكتساب العضلات مع أقل قدر من الدهون.",
+                targets: ["Skinny Fat"] 
+            },
+            "Ectomorph Diet": { 
+                en: "Frequent meals, high carbs, and moderate fats for fast metabolism.", 
+                ar: "وجبات متكررة، كربوهيدرات عالية ودهون معتدلة لذوي التمثيل الغذائي السريع.",
+                targets: ["Skinny", "Underweight"] 
+            },
+            "High Calorie Diet": { 
+                en: "Nutrient-dense foods to facilitate healthy weight gain.", 
+                ar: "أطعمة غنية بالعناصر الغذائية لتسهيل زيادة الوزن الصحية.",
+                targets: ["Underweight"] 
+            },
+            "Weight Gain Medical Diet": { 
+                en: "Clinical structure for safe and efficient weight restoration.", 
+                ar: "هيكل طبي لاستعادة الوزن بكفاءة وأمان.",
+                targets: ["Underweight"] 
+            },
+            "Mediterranean Diet": { 
+                en: "Heart-healthy fats, whole grains, and vegetables for longevity.", 
+                ar: "دهون صحية للقلب، حبوب كاملة وخضروات للعمر الطويل.",
+                targets: ["Normal", "Athletic"] 
+            },
+            "Balanced Diet": { 
+                en: "Adequate macronutrients from all food groups for general health.", 
+                ar: "مغذيات كافية من جميع المجموعات الغذائية للصحة العامة.",
+                targets: ["Normal"] 
+            },
+            "DASH Diet": { 
+                en: "Dietary approach to stop hypertension; low sodium, high potassium.", 
+                ar: "نهج غذائي لوقف ارتفاع ضغط الدم؛ منخفض الصوديوم، عالي البوتاسيوم.",
+                targets: ["Normal", "Obese"] 
+            },
+            "Zone Diet": { 
+                en: "Precise macronutrient ratio (40/30/30) for hormonal control.", 
+                ar: "نسبة دقيقة للمغذيات (40/30/30) للسيطرة الهرمونية.",
+                targets: ["Skinny Fat", "Athletic"] 
+            },
+            "Paleo Diet": { 
+                en: "Whole foods based on ancestral eating patterns.", 
+                ar: "أطعمة كاملة تعتمد على أنماط الأكل القديمة.",
+                targets: ["Normal", "Athletic"] 
+            },
+            "Vegan Diet": { 
+                en: "Plant-based nutrition focusing on fiber and antioxidants.", 
+                ar: "تغذية نباتية تركز على الألياف ومضادات الأكسدة.",
+                targets: ["Normal", "Skinny Fat"] 
+            },
+            "High Fiber Diet": { 
+                en: "Enhances digestion and satiety to aid weight management.", 
+                ar: "يعزز الهضم والشبع للمساعدة في إدارة الوزن.",
+                targets: ["Obese", "Normal"] 
+            }
+        };
+
+        let currentLang = 'en';
+        let calculationData = null;
+
+        // ========================
+        // 2. Core Logic
+        // ========================
+        let chartInstance = null;
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            document.body.classList.toggle('rtl');
+            document.getElementById('langBtn').innerText = currentLang === 'en' ? 'العربية' : 'English';
+            
+            // Update Text
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[currentLang][key]) el.innerText = i18n[currentLang][key];
+            });
+
+            if (calculationData) {
+                renderReportPreview(calculationData);
+                renderDashboard(calculationData);
+            }
+        }
+
+        function goToScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0,0);
+        }
+
+        function selectRadio(group, val, el) {
+            document.getElementById(group === 'gender' || group === 'activity' ? (group === 'gender' ? 'gender' : 'activity_level') : group).value = val;
+            el.parentElement.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function nextStep(curr) {
+            if(!validateStep(curr)) return;
+            document.getElementById(`step-${curr}`).classList.add('hidden');
+            document.getElementById(`step-${curr+1}`).classList.remove('hidden');
+            document.getElementById('progress-fill').style.width = `${(curr+1)*33}%`;
+            document.getElementById('step-indicator').innerText = currentLang==='en' ? `Step ${curr+1} of 3` : `الخطوة ${curr+1} من 3`;
+        }
+
+        function prevStep(curr) {
+            document.getElementById(`step-${curr}`).classList.add('hidden');
+            document.getElementById(`step-${curr-1}`).classList.remove('hidden');
+            document.getElementById('progress-fill').style.width = `${(curr-1)*33}%`;
+            document.getElementById('step-indicator').innerText = currentLang==='en' ? `Step ${curr-1} of 3` : `الخطوة ${curr-1} من 3`;
+        }
+
+        function validateStep(step) {
+            let valid = true;
+            if(step===1) {
+                if(!document.getElementById('name').value) { valid=false; document.getElementById('err-name').style.display='block'; } else document.getElementById('err-name').style.display='none';
+                if(!document.getElementById('gender').value) { valid=false; document.getElementById('err-gender').style.display='block'; } else document.getElementById('err-gender').style.display='none';
+            }
+            if(step===2) {
+                if(!document.getElementById('birth_date').value) { valid=false; document.getElementById('err-dob').style.display='block'; } else document.getElementById('err-dob').style.display='none';
+                if(!document.getElementById('height').value) { valid=false; document.getElementById('err-height').style.display='block'; } else document.getElementById('err-height').style.display='none';
+                if(!document.getElementById('weight').value) { valid=false; document.getElementById('err-weight').style.display='block'; } else document.getElementById('err-weight').style.display='none';
+            }
+            if(step===3) {
+                if(!document.getElementById('activity_level').value) { valid=false; document.getElementById('err-activity').style.display='block'; } else document.getElementById('err-activity').style.display='none';
+            }
+            return valid;
+        }
+
+        function submitForm() {
+            if(!validateStep(3)) return;
+            goToScreen('loading-page');
+            setTimeout(calculateAndShowResults, 1500);
+        }
+
+        function calculateAndShowResults() {
+            // 1. Inputs
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const gender = document.getElementById('gender').value;
+            const birthDate = new Date(document.getElementById('birth_date').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const activityLevel = document.getElementById('activity_level').value;
+
+            // 2. Age
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            if (today.getMonth() < birthDate.getMonth() || (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())) age--;
+
+            // 3. Original Equations (Unchanged)
+            const bmi = weight / Math.pow(height/100, 2);
+
+            let muscle_mass, skeletal_muscle_mass, minerals_mass, water_mass;
+            if(gender==="Male") {
+                muscle_mass = (0.566*weight)+(0.143*height)-(0.191*age)-17.8;
+                skeletal_muscle_mass = muscle_mass * 0.52;
+                minerals_mass = weight * 0.05;
+                water_mass = weight * 0.6;
+            } else {
+                muscle_mass = (0.407*weight)+(0.267*height)-(0.098*age)-14.6;
+                skeletal_muscle_mass = muscle_mass * 0.46;
+                minerals_mass = weight * 0.045;
+                water_mass = weight * 0.5;
+            }
+            const muscle_mass_pct = (muscle_mass/weight)*100;
+
+            let body_fat_pct;
+            if(gender==="Male") body_fat_pct = (1.39*bmi)+(0.16*age)-19.34;
+            else body_fat_pct = (1.39*bmi)+(0.16*age)-9;
+
+            const fat_mass = weight * (body_fat_pct/100);
+            const protein_mass = skeletal_muscle_mass * 0.22; // Estimate
+
+            // 4. Post-Calculation Validation (Smart Layer) - No Equation Change
+            // Clamp display values to physiological minimums
+            let display_fat_pct = body_fat_pct;
+            const MIN_FAT_MALE = 3;
+            const MIN_FAT_FEMALE = 8;
+
+            if(gender==="Male" && display_fat_pct < MIN_FAT_MALE) display_fat_pct = MIN_FAT_MALE;
+            if(gender==="Female" && display_fat_pct < MIN_FAT_FEMALE) display_fat_pct = MIN_FAT_FEMALE;
+
+            // 5. BMR & Calories
+            let bmr;
+            if(gender==="Male") bmr = (10*weight)+(6.25*height)-(5*age)+5;
+            else bmr = (10*weight)+(6.25*height)-(5*age)-161;
+
+            const acts = {"Low (No activity)":1.2, "Light (1-3 workouts/week)":1.375, "Moderate (3-5 workouts/week)":1.55, "High (Daily exercise)":1.725, "Very High (Intense daily exercise)":1.9};
+            const daily_cal = bmr * acts[activityLevel];
+
+            // 6. Body Type & Goal
+            let body_type = "Normal";
+            if(bmi<18.5) body_type="Underweight";
+            else if(bmi<22 && muscle_mass_pct<35) body_type="Skinny";
+            else if(bmi<25 && display_fat_pct>25) body_type="Skinny Fat";
+            else if(muscle_mass_pct>=40) body_type="Athletic";
+            else if(bmi>=30) body_type="Obese";
+
+            // Goal Mapping
+            const goalMap = {
+                "Underweight": { key: "gGain", text: "Healthy Weight Gain" },
+                "Skinny": { key: "gMuscle", text: "Muscle Building" },
+                "Skinny Fat": { key: "gRecomp", text: "Recomposition" },
+                "Obese": { key: "gLoss", text: "Fat Loss" },
+                "Normal": { key: "gMaint", text: "Maintenance" },
+                "Athletic": { key: "gMaint", text: "Maintenance" }
+            };
+            const goal = goalMap[body_type] || goalMap["Normal"];
+
+            // Adjustments
+            let cal_adj = 0;
+            if(["Underweight","Skinny"].includes(body_type)) cal_adj = 400;
+            else if(body_type==="Skinny Fat") cal_adj = 200;
+            const adj_cal = daily_cal + cal_adj;
+
+            let prot_target = weight * 1.6;
+            if(["Underweight","Skinny"].includes(body_type)) prot_target = weight * 2.2;
+            else if(body_type==="Skinny Fat") prot_target = weight * 2.0;
+
+            let carb_ratio = 0.55;
+            if(["Underweight","Skinny"].includes(body_type)) carb_ratio = 0.6;
+            const carb_mass = (adj_cal * carb_ratio)/4;
+
+            // 7. Warnings
+            let warnings = [];
+            if(body_type==="Obese") warnings.push("wObese");
+            if(muscle_mass_pct < (gender==="Male"?30:25)) warnings.push("wLowMuscle");
+            if(display_fat_pct < (gender==="Male"?5:13)) warnings.push("wLowFat"); // Display fat check
+
+            // 8. Dynamic Diet Selection
+            let selectedDiets = [];
+            // Filter diets that target this body type
+            const candidateDiets = Object.keys(dietLibrary).filter(k => dietLibrary[k].targets.includes(body_type));
+            
+            // If we have specific matches, use them. Otherwise fallback to Balanced.
+            if(candidateDiets.length > 0) {
+                // Shuffle slightly to avoid exact repetition, but keep top relevant
+                // Prioritize specific diets for this body type
+                selectedDiets = candidateDiets.slice(0, 3);
+            } else {
+                selectedDiets = ["Balanced Diet", "Mediterranean Diet"];
+            }
+
+            // 9. HR & Ideal
+            const hr_max = 220 - age;
+            const fat_burn_low = Math.round(hr_max * 0.6);
+            const fat_burn_high = Math.round(hr_max * 0.7);
+            const ideal_w = 22 * Math.pow(height/100, 2);
+
+            // Store Data
+            calculationData = {
+                name, phone, gender, age, height, weight, bmi, body_type, display_fat_pct, fat_mass,
+                muscle_mass, skeletal_muscle_mass, water_mass, minerals_mass, protein_mass,
+                hr_max, fat_burn_low, fat_burn_high, ideal_w,
+                daily_cal, adj_cal, prot_target, carb_mass, goal, warnings, selectedDiets
+            };
+
+            // Render
+            renderDashboard(calculationData);
+            renderReportPreview(calculationData);
+            renderChart(calculationData.muscle_mass, calculationData.fat_mass, calculationData.weight);
+            goToScreen('results-page');
+        }
+
+        function renderDashboard(data) {
+            const L = i18n[currentLang];
+            
+            // Badges & Header
+            document.getElementById('res-name-display').innerText = data.name;
+            document.getElementById('res-goal-badge').innerText = data.goal.text;
+
+            // Warnings
+            const wContainer = document.getElementById('warnings-container');
+            wContainer.innerHTML = '';
+            data.warnings.forEach(wKey => {
+                const div = document.createElement('div');
+                div.className = 'warning-box';
+                div.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:var(--warning)"></i> <div>${L[wKey]}</div>`;
+                wContainer.appendChild(div);
+            });
+
+            // Metrics
+            document.getElementById('res-bmi').innerText = data.bmi.toFixed(1);
+            document.getElementById('res-body-type').innerText = data.body_type.toUpperCase();
+            document.getElementById('res-fat').innerText = data.display_fat_pct.toFixed(1) + "%";
+            document.getElementById('res-fat-mass').innerText = `${data.fat_mass.toFixed(1)} kg`;
+            document.getElementById('res-muscle').innerText = `${data.muscle_mass.toFixed(1)} kg`;
+            document.getElementById('res-sk-muscle').innerText = `${data.skeletal_muscle_mass.toFixed(1)} kg`;
+            document.getElementById('res-calories').innerText = Math.round(data.daily_cal);
+            document.getElementById('res-adj-cal').innerText = `${currentLang==='en'?'Adj:':'معدل:'} ${Math.round(data.adj_cal)}`;
+
+            // Detailed
+            document.getElementById('res-water').innerText = `${data.water_mass.toFixed(1)} L`;
+            document.getElementById('res-protein-mass').innerText = `${data.protein_mass.toFixed(1)} kg`;
+            document.getElementById('res-minerals').innerText = `${data.minerals_mass.toFixed(2)} kg`;
+            document.getElementById('res-hr-zone').innerText = `${data.fat_burn_low}-${data.fat_burn_high}`;
+            document.getElementById('res-ideal-weight').innerText = `${data.ideal_w.toFixed(1)} kg`;
+
+            // Diets
+            const dContainer = document.getElementById('diet-container');
+            dContainer.innerHTML = '';
+            data.selectedDiets.forEach((dietName, idx) => {
+                const dietInfo = dietLibrary[dietName];
+                const div = document.createElement('div');
+                div.className = 'dashboard-grid-item'; // Using grid style container
+                div.style.background = 'var(--bg-card)';
+                div.style.padding = '20px';
+                div.style.borderRadius = '12px';
+                div.style.borderLeft = idx===0 ? '4px solid var(--primary)' : 'none';
+                if(currentLang==='ar') div.style.borderRight = idx===0 ? '4px solid var(--primary)' : 'none';
+
+                div.innerHTML = `
+                    <h4 style="color:var(--primary); margin-bottom:5px">${dietName}</h4>
+                    <p style="font-size:0.9rem; color:var(--text-gray)">${dietInfo[currentLang]}</p>
+                `;
+                dContainer.appendChild(div);
+            });
+        }
+
+        function renderChart(m, f, w) {
+            const ctx = document.getElementById('compositionChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [currentLang==='en'?'Muscle':'عضلات', currentLang==='en'?'Fat':'دهون', currentLang==='en'?'Other':'أخرى'],
+                    datasets: [{
+                        data: [m.toFixed(1), f.toFixed(1), (w-m-f).toFixed(1)],
+                        backgroundColor: ['#00d2ff', '#ff5252', '#2c3e50'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#fff' } }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        function renderReportPreview(data) {
+            const L = i18n[currentLang];
+            const container = document.getElementById('report-capture-area');
+            if(currentLang==='ar') container.classList.add('rtl-report');
+            else container.classList.remove('rtl-report');
+
+            let dietsHTML = '';
+            data.selectedDiets.forEach(d => {
+                dietsHTML += `
+                    <div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #eee">
+                        <b style="color:#00d2ff">${d}</b><br>
+                        <span style="font-size:12px; color:#555">${dietLibrary[d][currentLang]}</span>
+                    </div>
+                `;
+            });
+
+            let warningsHTML = '';
+            data.warnings.forEach(w => warningsHTML += `<div style="color:#d35400; background:#fff3cd; padding:5px; margin-top:2px; font-size:12px;">⚠ ${L[w]}</div>`);
+
+            container.innerHTML = `
+                <div class="report-header">
+                    <div class="report-logo">INBODY BY ER1991</div>
+                    <div style="color:#666; font-size:12px">${L.repSub}</div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; font-size:14px;">
+                    <div class="report-row"><span>${L.lName}:</span> <b>${data.name}</b></div>
+                    <div class="report-row"><span>${L.lAge}:</span> <b>${data.age}</b></div>
+                    <div class="report-row"><span>${L.lGender}:</span> <b>${data.gender}</b></div>
+                    <div class="report-row"><span>${L.lHeight}:</span> <b>${data.height} cm</b></div>
+                    <div class="report-row"><span>${L.lWeight}:</span> <b>${data.weight} kg</b></div>
+                    <div class="report-row"><span>${L.lBMI}:</span> <b>${data.bmi.toFixed(2)}</b></div>
+                </div>
+
+                <div class="report-section-title">${L.lType} & ${L.lGoal}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; font-size:14px;">
+                    <div class="report-row"><span>${L.lType}:</span> <b>${data.body_type.toUpperCase()}</b></div>
+                    <div class="report-row"><span>${L.lGoal}:</span> <b style="color:#e67e22">${L[data.goal.key]}</b></div>
+                </div>
+                ${warningsHTML}
+
+                <div class="report-section-title">${currentLang==='en'?'Body Analysis':'تحليل الجسم'}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; font-size:14px;">
+                    <div class="report-row"><span>${L.lFatPct}:</span> <b>${data.display_fat_pct.toFixed(2)}%</b></div>
+                    <div class="report-row"><span>${L.lFatMass}:</span> <b>${data.fat_mass.toFixed(2)} kg</b></div>
+                    <div class="report-row"><span>${L.lMuscle}:</span> <b>${data.muscle_mass.toFixed(2)} kg</b></div>
+                    <div class="report-row"><span>${L.lSkMuscle}:</span> <b>${data.skeletal_muscle_mass.toFixed(2)} kg</b></div>
+                    <div class="report-row"><span>${L.lWater}:</span> <b>${data.water_mass.toFixed(2)} kg</b></div>
+                    <div class="report-row"><span>${L.lMinerals}:</span> <b>${data.minerals_mass.toFixed(2)} kg</b></div>
+                </div>
+
+                <div class="report-section-title">${currentLang==='en'?'Metabolic Targets':'الأهداف الاستقلابية'}</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; font-size:14px;">
+                    <div class="report-row"><span>${L.lCal}:</span> <b>${Math.round(data.daily_cal)}</b></div>
+                    <div class="report-row"><span>${L.lAdjCal}:</span> <b>${Math.round(data.adj_cal)}</b></div>
+                    <div class="report-row"><span>${L.lProtT}:</span> <b>${data.prot_target.toFixed(1)} g</b></div>
+                    <div class="report-row"><span>${L.lCarbs}:</span> <b>${data.carb_mass.toFixed(1)} g</b></div>
+                    <div class="report-row"><span>${L.lFatBurn}:</span> <b>${data.fat_burn_low}-${data.fat_burn_high} bpm</b></div>
+                    <div class="report-row"><span>${L.lIdealW}:</span> <b>${data.ideal_w.toFixed(1)} kg</b></div>
+                </div>
+
+                <div class="report-section-title">${L.lDiets}</div>
+                <div style="background:#f9f9f9; padding:10px; border-radius:4px;">${dietsHTML}</div>
+
+                <div style="margin-top:30px; text-align:center; border-top:1px solid #eee; padding-top:10px; font-size:11px; color:#999;">
+                    Generated by INBODY BY ER1991 App © 2026
+                </div>
+            `;
+        }
+
+        function downloadReport() {
+            const btn = document.querySelector('.btn-primary');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${currentLang==='en'?'Generating...':'جاري الإنشاء...'}`;
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const element = document.getElementById("report-capture-area");
+                html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `InBody_ER1991_${calculationData.name}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }, 500);
+        }
+    </script>
+</body>
+</html>
